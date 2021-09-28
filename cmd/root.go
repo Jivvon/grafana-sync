@@ -48,8 +48,8 @@ additional directory will be created with tag name creating structure like direc
 			folderId int
 			err      error
 		)
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		tag, _ := cmd.Flags().GetString("tag")
 		folderName, _ := cmd.Flags().GetString("folderName")
@@ -78,8 +78,8 @@ var pushDashboardsCmd = &cobra.Command{
 			folderId int
 			err      error
 		)
-		url, _ := cmd.Flags().GetString("url")
-		apiKey, _ := cmd.Flags().GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		folderName, _ := cmd.Flags().GetString("folderName")
 
@@ -104,8 +104,8 @@ var pullFoldersCmd = &cobra.Command{
 	Long: `Save to the directory grafana folders json.
 Directory name specified by flag --directory.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		if err := grafana.PullFolders(url, apiKey, directory); err != nil {
 			log.Fatalln("Pull folders command failed", err)
@@ -118,8 +118,8 @@ var pushFoldersCmd = &cobra.Command{
 	Short: "Read json and create grafana folders",
 	Long:  `Read json with folders description and publish to grafana.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		if err := grafana.PushFolder(url, apiKey, directory); err != nil {
 			log.Fatalln("Push folders command failed", err)
@@ -133,8 +133,8 @@ var pullNotificationsCmd = &cobra.Command{
 	Long: `Save to the directory grafana folders json.
 Directory name specified by flag --directory.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		if err := grafana.PullNotifications(url, apiKey, directory); err != nil {
 			log.Fatalln("Pull notifications command failed", err)
@@ -147,8 +147,8 @@ var pushNotificationsCmd = &cobra.Command{
 	Short: "Read json and create grafana notifications",
 	Long:  `Read json with notifications description and publish to grafana.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		if err := grafana.PushNotification(url, apiKey, directory); err != nil {
 			log.Fatalln("Push notifications command failed", err)
@@ -162,8 +162,8 @@ var pullDataSourcesCmd = &cobra.Command{
 	Long: `Save to the directory grafana datasources json.
 Directory name specified by flag --directory.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		if err := grafana.PullDatasources(url, apiKey, directory); err != nil {
 			log.Fatalln("Pull datasources command failed", err)
@@ -176,8 +176,8 @@ var pushDataSourcesCmd = &cobra.Command{
 	Short: "Read json and create grafana datasources",
 	Long:  `Read json with datasources description and publish to grafana.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, _ := cmd.Flags().GetString("url")
-		apiKey := viper.GetString("apikey")
+		url := config.Address()
+		apiKey := config.Auth()
 		directory, _ := cmd.Flags().GetString("directory")
 		if err := grafana.PushDatasources(url, apiKey, directory); err != nil {
 			log.Fatalln("Push datasources command failed", err)
@@ -196,19 +196,15 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.grafana-sync.yaml)")
-	rootCmd.PersistentFlags().StringP("url", "u", "http://localhost:3000", "Grafana Url with port")
-	rootCmd.PersistentFlags().StringP("directory", "d", ".", "Directory where to save dashboards")
-	rootCmd.PersistentFlags().StringP("apikey", "a", "", "Grafana api key")
-	pullDataSourcesCmd.PersistentFlags().StringP("tag", "t", "", "Dashboard tag to read")
-	pushDashboardsCmd.PersistentFlags().IntP("folderId", "f", 0, "Directory Id to which push dashboards")
-	pushDashboardsCmd.PersistentFlags().StringP("folderName", "n", "", "Directory name to which push dashboards")
+	rootCmd.PersistentFlags().StringP("directory", "d", ".", "Directory where to save or load dashboards")
 
 	pullDashboardsCmd.PersistentFlags().IntP("folderId", "f", -1, "Directory Id from which pull dashboards")
 	pullDashboardsCmd.PersistentFlags().StringP("folderName", "n", "", "Directory name from which pull dashboards")
+	pullDashboardsCmd.PersistentFlags().StringP("tag", "t", "", "Dashboard tag to read")
 
-	if err := viper.BindPFlag("apikey", rootCmd.PersistentFlags().Lookup("apikey")); err != nil {
-		log.Println(err)
-	}
+	pushDashboardsCmd.PersistentFlags().IntP("folderId", "f", 0, "Directory Id to which push dashboards")
+	pushDashboardsCmd.PersistentFlags().StringP("folderName", "n", "", "Directory name to which push dashboards")
+
 
 	rootCmd.AddCommand(pullDashboardsCmd)
 	rootCmd.AddCommand(pushDashboardsCmd)
