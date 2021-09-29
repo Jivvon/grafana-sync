@@ -3,6 +3,7 @@ package grafana
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -69,6 +70,36 @@ func PushFolder(grafanaURL string, apiKey string, directory string) error {
 	return nil
 }
 
+func DeleteFolder(grafanaURL string, apiKey string, folderUid string) error {
+	ctx := context.Background()
+	c := sdk.NewClient(grafanaURL, apiKey, sdk.DefaultHTTPClient)
+
+	if _, err := c.DeleteFolderByUID(ctx, folderUid); err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteAllFolders(grafanaURL string, apiKey string) error {
+	var (
+		folders []sdk.Folder
+		err     error
+	)
+	ctx := context.Background()
+	c := sdk.NewClient(grafanaURL, apiKey, sdk.DefaultHTTPClient)
+
+	if folders, err = c.GetAllFolders(ctx); err != nil {
+		return err
+	}
+
+	for _, folder := range folders {
+		if _, err := c.DeleteFolderByUID(ctx, folder.UID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func FindFolderId(grafanaURL string, apiKey string, folderName string) (int, error) {
 	ctx := context.Background()
 	c := sdk.NewClient(grafanaURL, apiKey, sdk.DefaultHTTPClient)
@@ -84,4 +115,21 @@ func FindFolderId(grafanaURL string, apiKey string, folderName string) (int, err
 		}
 	}
 	return 0, nil
+}
+
+func FindFolderUid(grafanaURL string, apiKey string, folderName string) (string, error) {
+	ctx := context.Background()
+	c := sdk.NewClient(grafanaURL, apiKey, sdk.DefaultHTTPClient)
+
+	allFolders, err := c.GetAllFolders(ctx)
+
+	if err != nil {
+		return "", err
+	}
+	for _, folder := range allFolders {
+		if folder.Title == folderName {
+			return folder.UID, nil
+		}
+	}
+	return "", errors.New("Not found folder : " + folderName)
 }

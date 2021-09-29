@@ -5,6 +5,7 @@ type Config struct {
 	Port    string `mapstructure:"port"`
 	AdminID string `mapstructure:"adminID"`
 	AdminPW string `mapstructure:"adminPW"`
+	Folders []string `json:"folders"`
 }
 
 func (c *Config) Address() string {
@@ -14,4 +15,3 @@ func (c *Config) Address() string {
 func (c *Config) Auth() string {
 	return c.AdminID + ":" + c.AdminPW
 }
-

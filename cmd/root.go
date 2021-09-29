@@ -185,6 +185,33 @@ var pushDataSourcesCmd = &cobra.Command{
 	},
 }
 
+var deleteFolderCmd = &cobra.Command{
+	Use:   "delete-folder",
+	Short: "Delete folder include all dashboards in it",
+	Long:  `argument: folder name`,
+	Run: func(cmd *cobra.Command, args []string) {
+		url := config.Address()
+		apiKey := config.Auth()
+		isAll, _ := cmd.Flags().GetBool("all")
+		if isAll {
+			if err := grafana.DeleteAllFolders(url, apiKey); err != nil {
+				log.Fatalln("Delete all folder command failed", err)
+			}
+			return
+		}
+		for _, ival := range args {
+			folderUid, err := grafana.FindFolderUid(url, apiKey, ival)
+			if err != nil {
+				log.Fatalln("FindFolderUid in delete folder command failed", err)
+				return
+			}
+			if err = grafana.DeleteFolder(url, apiKey, folderUid); err != nil {
+				log.Fatalln("Delete folder command failed", err)
+			}
+		}
+	},
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -205,6 +232,7 @@ func init() {
 	pushDashboardsCmd.PersistentFlags().IntP("folderId", "f", 0, "Directory Id to which push dashboards")
 	pushDashboardsCmd.PersistentFlags().StringP("folderName", "n", "", "Directory name to which push dashboards")
 
+	deleteFolderCmd.PersistentFlags().BoolP("all", "a", false, "Delete all folders")
 
 	rootCmd.AddCommand(pullDashboardsCmd)
 	rootCmd.AddCommand(pushDashboardsCmd)
@@ -214,6 +242,7 @@ func init() {
 	rootCmd.AddCommand(pushNotificationsCmd)
 	rootCmd.AddCommand(pullDataSourcesCmd)
 	rootCmd.AddCommand(pushDataSourcesCmd)
+	rootCmd.AddCommand(deleteFolderCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.

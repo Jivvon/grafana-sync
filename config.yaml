@@ -1,4 +1,7 @@
-address: http://127.0.0.1
+host: http://127.0.0.1
 port: "30000"
 adminID: admin
 adminPW: "1234"
+folders:
+  - folder1
+  - folder2
