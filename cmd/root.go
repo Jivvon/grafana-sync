@@ -212,6 +212,29 @@ var deleteFolderCmd = &cobra.Command{
 	},
 }
 
+var syncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Sync folders and dashboards with storage",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		url := config.Address()
+		apiKey := config.Auth()
+		dataDirectory, _ := cmd.Flags().GetString("dataDir")
+		backupDirectory, _ := cmd.Flags().GetString("backupDir")
+
+		if dataDirectory == "" {
+			dataDirectory = "data"
+		}
+		if backupDirectory == "" {
+			backupDirectory = "backup"
+		}
+
+		if err := grafana.Sync(url, apiKey, dataDirectory, backupDirectory, config); err != nil {
+			log.Fatalln("Sync command failed", err)
+		}
+	},
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -234,6 +257,9 @@ func init() {
 
 	deleteFolderCmd.PersistentFlags().BoolP("all", "a", false, "Delete all folders")
 
+	syncCmd.PersistentFlags().StringP("dataDir", "D", "", "Data directory for sync")
+	syncCmd.PersistentFlags().StringP("backupDir", "B", "", "Backup directory for sync")
+
 	rootCmd.AddCommand(pullDashboardsCmd)
 	rootCmd.AddCommand(pushDashboardsCmd)
 	rootCmd.AddCommand(pullFoldersCmd)
@@ -243,6 +269,7 @@ func init() {
 	rootCmd.AddCommand(pullDataSourcesCmd)
 	rootCmd.AddCommand(pushDataSourcesCmd)
 	rootCmd.AddCommand(deleteFolderCmd)
+	rootCmd.AddCommand(syncCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
